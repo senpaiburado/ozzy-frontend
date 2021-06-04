@@ -1,7 +1,13 @@
 import logo from './logo.svg';
 import './App.css';
+import AuthPage from "./LoginPage";
+
 
 function App() {
+
+  if (!localStorage.token)
+    return <AuthPage />
+
   return (
     <div className="App">
       <header className="App-header">

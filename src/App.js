@@ -1,30 +1,44 @@
 import logo from './logo.svg';
 import './App.css';
 import AuthPage from "./LoginPage";
+import Table from "./UserTable"
+
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  Redirect
+} from "react-router-dom";
+import { Tab } from '@material-ui/core';
+
+function AuthChecker({page})
+{
+  try {
+    let token = JSON.parse(localStorage.token)
+    console.log(token)
+    if (!token || !token.jwt)
+      return <Redirect to="/login" />
+    return page;
+  } catch (err) {
+    console.log(err);
+    return <Redirect to="/login" />
+  }
+}
 
 
 function App() {
-
-  if (!localStorage.token)
-    return <AuthPage />
-
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Switch>
+          <Route path="/login">
+            <AuthPage />
+          </Route>
+          <Route path="/">
+            <AuthChecker page={<Table/>} />
+          </Route>
+        </Switch>
+    </Router>
   );
 }
 

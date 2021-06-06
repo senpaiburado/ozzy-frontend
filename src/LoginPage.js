@@ -12,6 +12,9 @@ import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
+import axios from "axios";
+
+import { Redirect } from "react-router-dom";
 
 function Copyright() {
   return (
@@ -69,10 +72,9 @@ export default function SignInSide() {
   const [password, setPassword] = useState("");
   
   const [error, setError] = useState("");
+  const [isAuth, setIsAuth] = useState(false);
 
-  
-
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault ();
     if (!email || !validateEmail(email)) {
         setError("Пошта невірна!")
@@ -83,8 +85,23 @@ export default function SignInSide() {
         return;
     }
     setError("");
-    console.log({ email, password })
-}
+
+    try {
+      const { data, status } = await axios.post('http://localhost:1337/auth/local', {
+        identifier: email,
+        password,
+      });
+      console.log(data)
+      localStorage.setItem('token', JSON.stringify(data));
+      setIsAuth(true);
+    } catch (err) {
+      console.log(err)
+      setError("Помилка! Перевірьте данні.")
+    }
+  }
+
+  if (isAuth)
+    return <Redirect to="/"/>
 
   return (
     <Grid container component="main" className={classes.root}>

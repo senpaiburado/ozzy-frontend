@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { createRef } from 'react'
 import Select from 'react-select'
 import _ from 'lodash'
 import Datasheet from 'react-datasheet'
 import axios from "axios";
-import { Button, Card, CardContent, Modal } from '@material-ui/core';
+import { Button, Card, CardContent, makeStyles, Modal } from '@material-ui/core';
 
 export default class ComponentSheet extends React.Component {
   constructor (props) {
@@ -20,10 +20,15 @@ export default class ComponentSheet extends React.Component {
     ]
     this.state = {
       grocery: {},
-      items: 3,
+      items: 30,
       openModal: false,
-      products: []
-    }
+      cacheProducts: [],
+      products: [],
+      currentProducts: [],
+      selectProduct: 0
+    };
+
+    this.selectAddPrRef = createRef();
   };
 
   handleOpen = () => {
@@ -36,13 +41,29 @@ export default class ComponentSheet extends React.Component {
 
   loadData = async () => {
     const token = JSON.parse(localStorage.getItem('token'));
-    console.log(token.jwt);
-    const { data } = await axios.get('http://localhost:1337/products', {
+    async function loadMetrics() {
+      const { data } = await axios.get('http://localhost:1337/metric-units', {
+          headers: {
+          Authorization: "Bearer " + token.jwt
+          },
+      });
+      console.log(data);
+    }
+    const { data } = await axios.get('http://localhost:1337/providers', {
         headers: {
         Authorization: "Bearer " + token.jwt
         },
     });
-    this.setState({ products: data })
+    await loadMetrics();
+    const result = data.filter(x => x.user.id === token.user.id)
+    let filteredProducts = [];
+    console.log(result)
+    for (let i = 0; i < result.length; i++)
+    {
+      filteredProducts = filteredProducts.concat(result[i].products)
+    }
+    filteredProducts = filteredProducts.filter((elem, pos, arr) => arr.indexOf(elem) == pos);
+    this.setState({ cacheProducts: result, products: filteredProducts })
   }
 
   async componentDidMount() {
@@ -87,50 +108,104 @@ export default class ComponentSheet extends React.Component {
         { value: groceryValue(id), component: component(id) }, 
         { component: (<Button color="secondary">Видалити</Button>), forceComponent: true }
     ]))
-    console.log(rows)
+    for (let i = 0; i < this.state.currentProducts.length; i++)
+    {
+      
+    }
     return rows
+  }
+
+  appendProduct = () => {
+    const productsSelected = this.selectAddPrRef.current.select.getValue();
+    if (productsSelected.length)
+    {
+      const productId = productsSelected[0].value;
+      console.log(productId)
+      console.log(this.state.products)
+      const filtered = this.state.products.filter(x => x.id == productId);
+      if (filtered.length && !this.state.currentProducts.filter(x => x.id == productId).length)
+      {
+        this.setState({ currentProducts: this.state.currentProducts.concat(filtered), openModal: false }, () => {
+          console.log(this.state.currentProducts)
+        })
+      }
+    }
   }
 
   render () {
     return (
-        <div>
+        <div id="bkg" style={styles.root}>
             { !this.state.products.length ? (<div>Loading...</div>) :
             (<div>
-                <Button onClick={this.handleOpen}>Додати</Button>
+              <div style={styles.row}>
+                <Button onClick={this.handleOpen} variant="contained" color="primary" style={{marginBottom: 10}} >Додати</Button>
+                <Button onClick={this.handleOpen} variant="contained" color="secondary" style={{marginBottom: 10}} >Вийти</Button>
+              </div>
                 <Modal
                 open={this.state.openModal}
                 onClose={this.handleClose}
                 aria-labelledby="simple-modal-title"
                 aria-describedby="simple-modal-description">
                 <Card style={{ width: 300, height: "100vh" }}>
+                {this.state.products.filter(x => !this.state.currentProducts.filter(y => y.id == x.id).length ).length ? (
                     <CardContent>
                         <p>Оберіть продукт та нажміть на кнопку "Готово"</p>
-                        {console.log(this.state.products[0])}
                         <Select
                             autofocus
                             openOnFocus
-                            defaultValue={{label: this.state.products[0].ProductName, value: this.state.products[0].id }}
-                            // onChange={(opt) => this.setState({grocery: _.assign(this.state.grocery, {[id]: opt})})}
-                            options={this.state.products.map((item) => {
+                            options={this.state.products.filter(x => !this.state.currentProducts.filter(y => y.id == x.id).length ).map((item) => {
                                 return { label: item.ProductName, value: item.id }
                             })}
+                            ref={this.selectAddPrRef}
                         />
-                        <Button style={{marginTop: 20}} variant="text">Готово</Button>
-                    </CardContent>
+                        <Button onClick={this.appendProduct} style={{marginTop: 20}} variant="text">Готово</Button>
+                    </CardContent>) :
+                    (<CardContent>
+                      <p>В списку більше нема продуктів</p>
+                  </CardContent>)}
                 </Card>
             </Modal>
+            <div style={styles.tableContainer}>
             <Datasheet
                 data={this.generateGrid()}
                 valueRenderer={(cell) => cell.value}
                 onChange={() => {}}
-            /></div>)}
+            /></div>
+            </div>)}
       </div>
     )
   }
 }
 
 const styles = {
-    card: {
+  root: {
+    height: '100vh',
+    backgroundImage: 'url(https://source.unsplash.com/random)',
+    backgroundRepeat: 'no-repeat',
+    // backgroundColor:
+    //   theme.palette.type === 'light' ? theme.palette.grey[50] : theme.palette.grey[900],
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    display: "flex",
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  tableContainer: {
+    width: "80vw",
+    backgroundColor: "white",
+    borderRadius: "10px",
+    maxHeight: "85vh",
+    "overflow-y": "scroll",
+    "-webkit-box-shadow": "4px 4px 8px 0px rgba(34, 60, 80, 0.3)",
+    "-moz-box-shadow": "4px 4px 8px 0px rgba(34, 60, 80, 0.3)",
+    "box-shadow": "4px 4px 8px 0px rgba(34, 60, 80, 0.3)",
+  },
+  card: {
 
-    }
+  },
+  row: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  }
 }

@@ -123,22 +123,49 @@ export default class BasicSheet extends React.Component {
         data = data.sort((first, second) => {
             return first.providerId - second.providerId
         })
-        historyData = historyData.sort((first, second) => {
-            return first.providerId - second.providerId
-        })
-        let prevDate = "";
-        let idx = 0;
-        let historyArr = [];
-        console.log(historyData)
-        for (let i = 0; i < 5; i++) {
-            
-            let order = historyData[i];
-            historyData.push({ })
+        historyData = _.groupBy(historyData, 'date')
+        let historyDataArr = []
+        for (const key in historyData) {
+            if (Object.hasOwnProperty.call(historyData, key)) {
+                const element = historyData[key];
+                historyDataArr.push(element);
+            }
+        }
+        if (!this.fixedData) {
+            console.log("new fixed data")
+            this.fixedData = data;
         }
 
-        this.setState({ data, historyData, isFetching: false }, () => {
+        this.setState({ data, historyData: historyDataArr, isFetching: false }, () => {
             this.generateGridFromData()
         })
+
+    }
+
+    nextPage = () => {
+        const page = this.state.currentIndex;
+        if (page + 1 >= this.state.historyData.length) {
+            this.setState({ currentIndex: 0, data: this.state.historyData[0] }, () => {
+                this.generateGridFromData();
+            })
+        } else {
+            this.setState({ currentIndex: page + 1, data: this.state.historyData[page + 1] }, () => {
+                this.generateGridFromData();
+            })
+        }
+    }
+
+    prevPage = () => {
+        const page = this.state.currentIndex;
+        if (page - 1 < 0) {
+            this.setState({ currentIndex: this.state.historyData.length - 1, data: this.state.historyData[this.state.historyData.length - 1] }, () => {
+                this.generateGridFromData();
+            })
+        } else {
+            this.setState({ currentIndex: page - 1, data: this.state.historyData[page - 1] }, () => {
+                this.generateGridFromData();
+            })
+        }
     }
 
     valueRenderer = cell => cell.value;
@@ -155,18 +182,22 @@ export default class BasicSheet extends React.Component {
                             { this.state.pageIndex ? 
                             (<div>
                                 <div style={styles.row}>
-                                    <Button  variant="contained" color="default">Назад</Button>
+                                    <Button onClick={this.prevPage} variant="contained" color="default">Назад</Button>
                                     <BottomNavigation
                                         value={this.state.pageIndex}
                                         onChange={(event, newValue) => {
-                                            this.setState({ pageIndex: newValue })
+                                            this.setState({ pageIndex: newValue,
+                                                data: this.fixedData,
+                                                currentIndex: 0 }, () => {
+                                                    this.generateGridFromData();
+                                                })
                                         }}
                                         showLabels
                                     >
                                         <BottomNavigationAction label="Замовлення" icon={<ListAltOutlined />} />
                                         <BottomNavigationAction label="Історія" icon={<HistoryOutlined />} />
                                     </BottomNavigation>
-                                    <Button variant="contained" color="default">Вперед</Button>
+                                    <Button onClick={this.nextPage} variant="contained" color="default">Вперед</Button>
                                 </div>
                                 <div style={styles.tableContainer}>
                                     <Datasheet
@@ -184,7 +215,18 @@ export default class BasicSheet extends React.Component {
                                     <BottomNavigation
                                         value={this.state.pageIndex}
                                         onChange={(event, newValue) => {
-                                            this.setState({ pageIndex: newValue })
+                                            if (this.state.historyData.length)
+                                            {
+                                                console.log(this.state.historyData[0])
+                                                this.setState({ pageIndex: newValue, data: this.state.historyData[0], currentIndex: 0 }, () => {
+                                                    this.generateGridFromData();
+                                                })
+                                            }
+                                            else {
+                                                this.setState({ data: [],  currentIndex: 0, pageIndex: newValue  }, () => {
+                                                    this.generateGridFromData()
+                                                })
+                                            }
                                         }}
                                         showLabels
                                     >

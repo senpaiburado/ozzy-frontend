@@ -5,6 +5,7 @@ import Datasheet from 'react-datasheet'
 import axios from "axios";
 import { Button, Card, CardContent, makeStyles, Modal } from '@material-ui/core';
 import { Redirect } from 'react-router';
+import Alert from '@material-ui/lab/Alert';
 
 export default class ComponentSheet extends React.Component {
     constructor(props) {
@@ -23,6 +24,26 @@ export default class ComponentSheet extends React.Component {
 
         this.selectAddPrRef = createRef();
     };
+
+    selectUnit = (units, index) => {
+        return (
+            <Select
+                autofocus
+                openOnFocus
+                options={units.map(item => {
+                    return { label: item.unit, value: item.id }
+                })}
+                onChange={({label, value}) => {
+                    if (index < 2)
+                        index = index + 2;
+                    let grid = this.state.grid;
+                    const unit = units.filter(x => x.id == value)[0];
+                    grid[index][2].value = unit ? unit.ShortName : label;
+                    grid[index][2].unit_id = value;
+                }}
+            />
+        )
+    }
 
     handleOpen = () => {
         this.setState({ openModal: true });
@@ -55,7 +76,9 @@ export default class ComponentSheet extends React.Component {
 
     removeItem(id) {
         this.setState({ currentProducts: this.state.currentProducts.filter(x => x.id != id) }, () => {
-            this.generateGrid()
+            let grid = this.state.grid;
+            grid = grid.filter(x => x[0] && x[0].id && x[0].id != id);
+            this.setState({ grid })
         })
     }
 
@@ -70,22 +93,12 @@ export default class ComponentSheet extends React.Component {
                 return ''
             }
         }
-        const selectUnit = (units, elem) => {
-            return (
-                <Select
-                    autofocus
-                    openOnFocus
-                    options={units.map(item => {
-                        return { label: item.unit, value: item.id }
-                    })}
-                />
-            )
-        }
+       
 
         let rows = [
-            [{ readOnly: true, colSpan: 4, value: 'Список замовлень' }],
+            [{ readOnly: true, colSpan: 4, value: 'Список замовлень', id: -999 }],
             [
-                { readOnly: true, value: 'Продукт' },
+                { readOnly: true, value: 'Продукт', id: -999 },
                 { readOnly: true, value: "Кількість" },
                 { readOnly: true, value: "Одиниця виміру" },
                 { readOnly: true, value: "Дія" },
@@ -95,9 +108,9 @@ export default class ComponentSheet extends React.Component {
         for (let i = 0; i < this.state.currentProducts.length; i++) {
             const item = this.state.currentProducts[i];
             rows = rows.concat([[
-                { readOnly: true, value: item.ProductName },
+                { readOnly: true, value: item.ProductName, id: item.id },
                 {},
-                { forceComponent: true, component: selectUnit(item.metric_units, this) },
+                { value: "", forceComponent: true, component: this.selectUnit(item.metric_units, i) },
                 { forceComponent: true, component: (<Button color="secondary" onClick={() => { this.removeItem(item.id) }} >Видалити</Button>) }
             ]])
         }
@@ -110,12 +123,18 @@ export default class ComponentSheet extends React.Component {
         const productsSelected = this.selectAddPrRef.current.select.getValue();
         if (productsSelected.length) {
             const productId = productsSelected[0].value;
-            console.log(productId)
-            console.log(this.state.products)
             const filtered = this.state.products.filter(x => x.id == productId);
             if (filtered.length && !this.state.currentProducts.filter(x => x.id == productId).length) {
                 this.setState({ currentProducts: this.state.currentProducts.concat(filtered), openModal: false }, () => {
-                    this.generateGrid()
+                    let grid = this.state.grid;
+                    const item = this.state.currentProducts[ this.state.currentProducts.length - 1 ];
+                    grid.push([
+                        { readOnly: true, value: item.ProductName, id: item.id },
+                        {},
+                        { value: "", forceComponent: true, component: this.selectUnit(item.metric_units, this.state.grid.length) },
+                        { forceComponent: true, component: (<Button color="secondary" onClick={() => { this.removeItem(item.id) }} >Видалити</Button>) }
+                    ])
+                    this.setState({ grid: grid })
                 })
             }
         }
@@ -139,15 +158,60 @@ export default class ComponentSheet extends React.Component {
         }
     }
 
+    sendData = async () => {
+        let answer = window.confirm("Перевірили данні?")
+        const token = JSON.parse(localStorage.token);
+        if (answer)
+        {
+            let outputData = [];
+            const grid = this.state.grid;
+            grid.forEach((row, idx) => {
+                if (idx < 2)
+                    return;
+
+                let dataObject = {
+                    product_id: row[0].id,
+                    count: row[1].value,
+                    unit: row[2].value
+                }
+                outputData.push(dataObject);
+            })
+            if (outputData.length) {
+                try {
+                    const { data } = await axios.post(
+                        'http://localhost:1337/orders',
+                        {
+                          date: new Date(),
+                          user: token.user.id,
+                          data: outputData
+                        },
+                        {
+                          headers: {
+                            Authorization:
+                              'Bearer ' + token.jwt,
+                          },
+                        }
+                      );
+                  
+                    console.log(data);
+                    window.location.reload();
+                } catch (err) {
+                    console.log(err);
+                }
+            }
+        }
+    }
+
     render() {
         if (this.state.loggedOut)
             return <Redirect to="/login"/>
         return (
             <div id="bkg" style={styles.root}>
-                { !this.state.products.length ? (<div>Loading...</div>) :
+                { !this.state.products.length ? (<Alert severity="info">Зачейкайте, будь ласка! Завантаження...</Alert>) :
                     (<div>
                         <div style={styles.row}>
                             <Button onClick={this.handleOpen} variant="contained" color="primary" style={{ marginBottom: 10 }} >Додати</Button>
+                            <Button onClick={this.sendData} variant="contained" color="primary" style={{ marginBottom: 10 }} >Відправити</Button>
                             <Button onClick={this.logOut} variant="contained" color="secondary" style={{ marginBottom: 10 }} >Вийти</Button>
                         </div>
                         <Modal
@@ -206,10 +270,8 @@ const styles = {
         borderRadius: "10px",
         maxHeight: "85vh",
         minHeight: '40vh',
-        "overflow-y": "scroll",
-        "-webkit-box-shadow": "4px 4px 8px 0px rgba(34, 60, 80, 0.3)",
-        "-moz-box-shadow": "4px 4px 8px 0px rgba(34, 60, 80, 0.3)",
-        "box-shadow": "4px 4px 8px 0px rgba(34, 60, 80, 0.3)",
+        overflowY: "scroll",
+        boxShadow: "4px 4px 8px 0px rgba(34, 60, 80, 0.3)"
     },
     card: {
 

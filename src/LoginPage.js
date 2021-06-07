@@ -87,7 +87,7 @@ export default function SignInSide() {
     setError("");
 
     try {
-      const { data, status } = await axios.post('http://localhost:1337/auth/local', {
+      const { data, status } = await axios.post('https://ozzy-backend.herokuapp.com/auth/local', {
         identifier: email,
         password,
       });

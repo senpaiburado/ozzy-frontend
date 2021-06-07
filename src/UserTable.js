@@ -55,7 +55,7 @@ export default class ComponentSheet extends React.Component {
 
     loadData = async () => {
         const token = JSON.parse(localStorage.getItem('token'));
-        const { data } = await axios.get('http://localhost:1337/providers', {
+        const { data } = await axios.get('https://ozzy-backend.herokuapp.com/providers', {
             headers: {
                 Authorization: "Bearer " + token.jwt
             },
@@ -179,7 +179,7 @@ export default class ComponentSheet extends React.Component {
             if (outputData.length) {
                 try {
                     const { data } = await axios.post(
-                        'http://localhost:1337/orders',
+                        'https://ozzy-backend.herokuapp.com/orders',
                         {
                           date: new Date(),
                           user: token.user.id,

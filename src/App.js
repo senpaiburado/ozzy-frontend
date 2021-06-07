@@ -41,6 +41,8 @@ function AuthChecker({page})
     console.log(token)
     if (!token || !token.jwt)
       return <Redirect to="/login" />
+    if (token.user.isModerator)
+      return <Redirect to="/admin" />
     return page;
   } catch (err) {
     console.log(err);

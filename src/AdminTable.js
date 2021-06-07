@@ -14,7 +14,7 @@ export default class BasicSheet extends React.Component {
             grid: [],
             data: [],
             historyData: [],
-            currentIndex: "",
+            currentIndex: 0,
             pageIndex: 0,
             isFetching: false
         };
@@ -38,12 +38,12 @@ export default class BasicSheet extends React.Component {
         ]
         this.state.data.forEach(order => {
             rows = rows.concat([[
-                {  value: order.date },
-                {  value: order.userName },
-                {  value: order.userAdress },
-                {  value: order.product },
-                {  value: order.countAndUnit },
-                {  value: order.provider }
+                { value: order.date },
+                { value: order.userName },
+                { value: order.userAdress },
+                { value: order.product },
+                { value: order.countAndUnit },
+                { value: order.provider }
             ]])
         })
         this.setState({ grid: rows })
@@ -74,7 +74,7 @@ export default class BasicSheet extends React.Component {
     }
 
     loadData = async () => {
-        this.setState({isFetching: true})
+        this.setState({ isFetching: true })
         const token = JSON.parse(localStorage.getItem('token'));
         const usersAnswer = await axios.get('http://localhost:1337/users', {
             headers: {
@@ -123,13 +123,22 @@ export default class BasicSheet extends React.Component {
         data = data.sort((first, second) => {
             return first.providerId - second.providerId
         })
-        historyData = _.groupBy(historyData, order => moment(order.date).format("DD-MM-YYYY"));
+        historyData = historyData.sort((first, second) => {
+            return first.providerId - second.providerId
+        })
+        let prevDate = "";
+        let idx = 0;
+        let historyArr = [];
+        console.log(historyData)
+        for (let i = 0; i < 5; i++) {
+            
+            let order = historyData[i];
+            historyData.push({ })
+        }
 
         this.setState({ data, historyData, isFetching: false }, () => {
             this.generateGridFromData()
-            // this.setState({})
         })
-        console.log(data)
     }
 
     valueRenderer = cell => cell.value;
@@ -141,30 +150,59 @@ export default class BasicSheet extends React.Component {
         return (
             <div style={styles.root}>
                 { this.state.isFetching ? (<Alert severity="info">Зачейкайте, будь ласка! Завантаження...</Alert>) :
-                (<div>
-                    <div style={styles.row}>
-                        <Button onClick={this.approveFinished} variant="contained" color="primary">Підтвердити</Button>
-                        <BottomNavigation
-                            value={this.state.pageIndex}
-                            onChange={(event, newValue) => {
-                                this.setState({pageIndex: newValue})
-                            }}
-                            showLabels
-                            >
-                            <BottomNavigationAction label="Замовлення" icon={<ListAltOutlined />} />
-                            <BottomNavigationAction label="Історія" icon={<HistoryOutlined />} />
-                        </BottomNavigation>
-                        <Button onClick={this.cancelIt} variant="contained" color="secondary">Відхилити</Button>
-                    </div>
-                    <div style={styles.tableContainer}>
-                    <Datasheet
-                        data={this.state.grid}
-                        valueRenderer={this.valueRenderer}
-                        onContextMenu={this.onContextMenu}
-                        onCellsChanged={this.onCellsChanged} />
+                    (
+                        <div>
+                            { this.state.pageIndex ? 
+                            (<div>
+                                <div style={styles.row}>
+                                    <Button  variant="contained" color="default">Назад</Button>
+                                    <BottomNavigation
+                                        value={this.state.pageIndex}
+                                        onChange={(event, newValue) => {
+                                            this.setState({ pageIndex: newValue })
+                                        }}
+                                        showLabels
+                                    >
+                                        <BottomNavigationAction label="Замовлення" icon={<ListAltOutlined />} />
+                                        <BottomNavigationAction label="Історія" icon={<HistoryOutlined />} />
+                                    </BottomNavigation>
+                                    <Button variant="contained" color="default">Вперед</Button>
+                                </div>
+                                <div style={styles.tableContainer}>
+                                    <Datasheet
+                                        data={this.state.grid}
+                                        valueRenderer={this.valueRenderer}
+                                        onContextMenu={this.onContextMenu}
+                                        onCellsChanged={this.onCellsChanged} />
 
-                    </div>
-                </div>)}
+                                </div>
+                            </div>) 
+                            :
+                            (<div>
+                                <div style={styles.row}>
+                                    <Button onClick={this.approveFinished} variant="contained" color="primary">Підтвердити</Button>
+                                    <BottomNavigation
+                                        value={this.state.pageIndex}
+                                        onChange={(event, newValue) => {
+                                            this.setState({ pageIndex: newValue })
+                                        }}
+                                        showLabels
+                                    >
+                                        <BottomNavigationAction label="Замовлення" icon={<ListAltOutlined />} />
+                                        <BottomNavigationAction label="Історія" icon={<HistoryOutlined />} />
+                                    </BottomNavigation>
+                                    <Button onClick={this.cancelIt} variant="contained" color="secondary">Відхилити</Button>
+                                </div>
+                                <div style={styles.tableContainer}>
+                                    <Datasheet
+                                        data={this.state.grid}
+                                        valueRenderer={this.valueRenderer}
+                                        onContextMenu={this.onContextMenu}
+                                        onCellsChanged={this.onCellsChanged} />
+
+                                </div>
+                            </div>)}
+                        </div>)}
             </div>
         );
     }

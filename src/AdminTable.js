@@ -53,7 +53,7 @@ export default class BasicSheet extends React.Component {
         if (!window.confirm("Впевнені, що хочете архівувати запис?"))
             return;
         const token = JSON.parse(localStorage.getItem('token'));
-        const answer = await axios.post('https://ozzy-backend.herokuapp.com/orders/approve-all', {
+        const answer = await axios.post('http://localhost:1337/orders/approve-all', {
             headers: {
                 Authorization: "Bearer " + token.jwt
             },
@@ -65,7 +65,7 @@ export default class BasicSheet extends React.Component {
         if (!window.confirm("Впевнені, що хочете відхилити запис?"))
             return;
         const token = JSON.parse(localStorage.getItem('token'));
-        const answer = await axios.post('https://ozzy-backend.herokuapp.com/orders/cancel', {
+        const answer = await axios.post('http://localhost:1337/orders/cancel', {
             headers: {
                 Authorization: "Bearer " + token.jwt
             },
@@ -76,12 +76,12 @@ export default class BasicSheet extends React.Component {
     loadData = async () => {
         this.setState({ isFetching: true })
         const token = JSON.parse(localStorage.getItem('token'));
-        const usersAnswer = await axios.get('https://ozzy-backend.herokuapp.com/users', {
+        const usersAnswer = await axios.get('http://localhost:1337/users', {
             headers: {
                 Authorization: "Bearer " + token.jwt
             },
         });
-        const productsAnswer = await axios.get('https://ozzy-backend.herokuapp.com/products', {
+        const productsAnswer = await axios.get('http://localhost:1337/products', {
             headers: {
                 Authorization: "Bearer " + token.jwt
             },

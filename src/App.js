@@ -60,7 +60,7 @@ function App() {
               <AuthPage />
             </Route>
             <Route path="/admin">
-              <AdminTable/>
+              <AuthChecker page={<AdminTable/>} />
             </Route>
             <Route path="/">
               <AuthChecker page={<Table/>} />

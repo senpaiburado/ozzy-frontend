@@ -30,6 +30,7 @@ export default class ComponentSheet extends React.Component {
             <Select
                 autofocus
                 openOnFocus
+                defaultValue={units.length ? { label: units[0].unit, value: units[0].id } : {}}
                 options={units.map(item => {
                     return { label: item.unit, value: item.id }
                 })}
@@ -131,7 +132,7 @@ export default class ComponentSheet extends React.Component {
                     grid.push([
                         { readOnly: true, value: item.ProductName, id: item.id },
                         {},
-                        { value: "", forceComponent: true, component: this.selectUnit(item.metric_units, this.state.grid.length) },
+                        { value: item.metric_units.length ? item.metric_units[0].unit : "", forceComponent: true, component: this.selectUnit(item.metric_units, this.state.grid.length) },
                         { forceComponent: true, component: (<Button color="secondary" onClick={() => { this.removeItem(item.id) }} >Видалити</Button>) }
                     ])
                     this.setState({ grid: grid })

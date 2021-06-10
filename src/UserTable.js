@@ -56,7 +56,7 @@ export default class ComponentSheet extends React.Component {
 
     loadData = async () => {
         const token = JSON.parse(localStorage.getItem('token'));
-        const { data } = await axios.get('http://localhost:1337/providers', {
+        const { data } = await axios.get('http://23.100.51.147:1337/providers', {
             headers: {
                 Authorization: "Bearer " + token.jwt
             },
@@ -180,7 +180,7 @@ export default class ComponentSheet extends React.Component {
             if (outputData.length) {
                 try {
                     const { data } = await axios.post(
-                        'http://localhost:1337/orders',
+                        'http://23.100.51.147:1337/orders',
                         {
                           date: new Date(),
                           user: token.user.id,

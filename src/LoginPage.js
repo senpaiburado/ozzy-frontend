@@ -87,7 +87,7 @@ export default function SignInSide() {
     setError("");
 
     try {
-      const { data, status } = await axios.post('http://localhost:1337/auth/local', {
+      const { data, status } = await axios.post('http://23.100.51.147:1337/auth/local', {
         identifier: email,
         password,
       });

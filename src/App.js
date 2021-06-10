@@ -37,6 +37,7 @@ class ErrorBoundary extends React.Component {
 function AuthChecker({page})
 {
   try {
+    debugger
     let token = JSON.parse(localStorage.token)
     console.log(token)
     if (!token || !token.jwt)
@@ -60,7 +61,7 @@ function App() {
               <AuthPage />
             </Route>
             <Route path="/admin">
-              <AuthChecker page={<AdminTable/>} />
+              <AdminTable />
             </Route>
             <Route path="/">
               <AuthChecker page={<Table/>} />

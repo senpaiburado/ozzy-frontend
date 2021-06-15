@@ -64,7 +64,7 @@ function createExcel(data) {
 
 function ExportModal(props) {
 
-    const [selectedProviderId, setSelectedProviderId] = useState(1);
+    const [selectedProviderId, setSelectedProviderId] = useState(-1);
 
     const [checked, setChecked] = React.useState([0]);
 

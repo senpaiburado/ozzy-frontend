@@ -190,22 +190,52 @@ export default class BasicSheet extends React.Component {
         let rows = [
             [{ readOnly: true, colSpan: 6, value: 'Список замовлень' }],
             [
-                { readOnly: true, value: 'Дата' },
-                { readOnly: true, value: 'Клієнт' },
-                { readOnly: true, value: "Адреса" },
-                { readOnly: true, value: "Продукт" },
-                { readOnly: true, value: "Кількість" },
-                { readOnly: true, value: "Постачальник" },
+                { readOnly: true, value: 'Дата', onClick: () => {
+                    this.setState({ data: this.state.data.sort((f, s) => {
+                        return f.date.localeCompare(s.date);
+                    }) }, () => {
+                        this.generateGridFromData();
+                    })
+                } },
+                { readOnly: true, value: 'Клієнт', onClick: () => {
+                    this.setState({ data: this.state.data.sort((f, s) => {
+                        return f.userName.localeCompare(s.userName);
+                    }) }, () => {
+                        this.generateGridFromData();
+                    })
+                } },
+                { readOnly: true, value: "Адреса", onClick: () => {
+                    this.setState({ data: this.state.data.sort((f, s) => {
+                        return f.userAdress.localeCompare(s.userAdress);
+                    }) }, () => {
+                        this.generateGridFromData();
+                    })
+                } },
+                { readOnly: true, value: "Продукт", onClick: () => {
+                    this.setState({ data: this.state.data.sort((f, s) => {
+                        return f.product.localeCompare(s.product);
+                    }) }, () => {
+                        this.generateGridFromData();
+                    })
+                } },
+                { readOnly: true, value: "Кількість", onClick: null },
+                { readOnly: true, value: "Постачальник", onClick: () => {
+                    this.setState({ data: this.state.data.sort((f, s) => {
+                        return f.provider.localeCompare(s.provider);
+                    }) }, () => {
+                        this.generateGridFromData();
+                    })
+                } },
             ]
         ]
         this.state.data.forEach(order => {
             rows = rows.concat([[
-                { value: order.date },
-                { value: order.userName },
-                { value: order.userAdress },
-                { value: order.product },
-                { value: order.countAndUnit },
-                { value: order.provider }
+                { value: order.date, onClick: null },
+                { value: order.userName, onClick: null },
+                { value: order.userAdress, onClick: null },
+                { value: order.product, onClick: null },
+                { value: order.countAndUnit, onClick: null },
+                { value: order.provider, onClick: null }
             ]])
         })
         this.setState({ grid: rows })
@@ -337,7 +367,7 @@ export default class BasicSheet extends React.Component {
         }
     }
 
-    valueRenderer = cell => cell.value;
+    valueRenderer = cell => cell.onClick ? <div onClick={cell.onClick}>{cell.value}</div> : cell.value;
 
     onContextMenu = (e, cell, i, j) =>
         cell.readOnly ? e.preventDefault() : null;

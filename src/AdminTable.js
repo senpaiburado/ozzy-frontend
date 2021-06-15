@@ -218,7 +218,13 @@ export default class BasicSheet extends React.Component {
                         this.generateGridFromData();
                     })
                 } },
-                { readOnly: true, value: "Кількість", onClick: null },
+                { readOnly: true, value: "Кількість", onClick: () => {
+                    this.setState({ data: this.state.data.sort((f, s) => {
+                        return f.count - s.count;
+                    }) }, () => {
+                        this.generateGridFromData();
+                    })
+                } },
                 { readOnly: true, value: "Постачальник", onClick: () => {
                     this.setState({ data: this.state.data.sort((f, s) => {
                         return f.provider.localeCompare(s.provider);
@@ -302,6 +308,7 @@ export default class BasicSheet extends React.Component {
                             const orderData = {
                                 product: productObj ? productObj.ProductName : product.product_id,
                                 countAndUnit: product.count + " " + product.unit,
+                                count: parseInt(String(product.count)),
                                 userName: user.username,
                                 userAdress: user.address,
                                 userId: user.id,
